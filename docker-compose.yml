@@ -1,0 +1,54 @@
+# Copie e cole a pasta .docker e o arquivo docker-compose.yml na raiz de seu App
+# Ajuste as propriedades "ports" e "container_name" evitando conflitos com outros containers
+# Execute no terminal o comando: "docker-compose up -d"
+# NOTA: O PHP Composer é executado no terminal do container do service app (myapp-php)
+
+version: "3.7"
+services:
+  app:
+    build:
+      args:
+        user: sammy
+        uid: 1000
+      context: ./
+      dockerfile: ./.docker/php/Dockerfile
+    image: laravel
+    container_name: myapp-php
+    restart: unless-stopped
+    working_dir: /var/www/
+    volumes:
+      - ./:/var/www
+    networks:
+      - net
+
+  db:
+    image: mysql:5.7
+    container_name: myapp-mysql # no código de seu App utilize o nome do container na URL de conexão
+    restart: unless-stopped
+    ports:
+      - "3399:3306" # define a porta local onde vai rodar o mysql, neste caso 3399 (localhost:3399)
+    volumes:
+      - ./.docker/repository/mysql:/var/lib/mysql
+    environment:
+      MYSQL_DATABASE: "db_myapp" # caso use arquivo .env substitua por: ${DB_DATABASE}
+      MYSQL_ROOT_PASSWORD: "root" # caso use arquivo .env substitua por: ${DB_PASSWORD}
+      SERVICE_TAGS: dev
+      SERVICE_NAME: mysql
+    networks:
+      - net
+
+  nginx:
+    image: nginx:alpine
+    container_name: myapp-nginx
+    restart: unless-stopped
+    ports:
+      - "8000:80" # define a porta local onde vai rodar seu App, neste caso 8099 (localhost:8099).
+    volumes:
+      - ./:/var/www
+      - ./.docker/nginx:/etc/nginx/conf.d/
+    networks:
+      - net
+
+networks:
+  net:
+    driver: bridge

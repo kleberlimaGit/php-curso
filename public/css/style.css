@@ -1,0 +1,9 @@
+span:hover {
+	color: #3498db !important;
+	transition: color 0.4s !important;
+}
+
+span{
+	color: #fff;
+	transition:color 0.2s !important;
+}
